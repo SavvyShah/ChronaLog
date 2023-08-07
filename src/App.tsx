@@ -7,19 +7,24 @@ import {
 import { calculateTotalElapsedTime } from "./utils/calculateTotalElapsedTime";
 import { calculateTimeDifference } from "./utils/calculateTimeDifference";
 import { useEffect, useRef, useState } from "react";
-import { Task } from "./types/core";
 import { EditableInput } from "./components/EditableInput";
-
-let uniqId = 10;
-
-const taskData: Task[] = [];
+import { TaskWithOptionalId, db } from "./db";
+import { useLiveQuery } from "dexie-react-hooks";
 
 function App() {
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [appData, setAppData] = useState<Task[]>(taskData);
+  const [activeTask, setActiveTask] = useState<TaskWithOptionalId | null>(null);
   const [ticking, setTicking] = useState<boolean>(false);
   const [count, setCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const taskTable = db.tasks;
+  const tasks = useLiveQuery(async () => {
+    //
+    // Query the DB using our promise based API.
+    // The end result will magically become
+    // observable.
+    //
+    return await taskTable.toArray();
+  });
 
   useEffect(() => {
     if (!intervalRef.current) {
@@ -33,23 +38,25 @@ function App() {
     }
   }, [ticking, count]);
 
-  const handleStartTask = (task: Task) => {
+  const handleStartTask = (task: TaskWithOptionalId) => {
     setActiveTask(task);
     setTicking(true);
   };
 
-  const handleEndTask = () => {
+  const handleEndTask = async () => {
     if (activeTask) {
-      setAppData(
-        updateElapsedTime(activeTask, activeTask.elapsedTime + count, appData)
-      );
+      await taskTable.put({
+        ...activeTask,
+        elapsedTime: activeTask.elapsedTime + count,
+      });
     }
     setActiveTask(null);
     setTicking(false);
     setCount(0);
   };
-  const handleSave = (task: Partial<Task>) => {
-    setAppData(updateOrCreateTask(task, appData));
+  const handleSave = async (task: Partial<TaskWithOptionalId>) => {
+    const defaultTask = { task: "Untitled", elapsedTime: 0 };
+    await taskTable.put({ ...defaultTask, ...task });
   };
 
   return (
@@ -64,7 +71,7 @@ function App() {
             </tr>
           </thead>
           <tbody>
-            {appData.map((task) => (
+            {tasks?.map((task) => (
               <TaskCell
                 key={task.id}
                 task={task}
@@ -119,17 +126,22 @@ const TaskCell = ({
   handleStartTask,
   handleSave,
 }: {
-  task: Task;
-  handleStartTask: (task: Task) => void;
-  handleSave: (task: Partial<Task>) => void;
+  task: TaskWithOptionalId;
+  handleStartTask: (task: TaskWithOptionalId) => void;
+  handleSave: (task: Partial<TaskWithOptionalId>) => void;
 }) => {
+  const [text, setText] = useState(task.task);
+
   return (
     <tr className="hover:bg-slate-200">
       <td className="p-4">
         <EditableInput
-          value={task.task}
+          value={text}
           onChange={(e) => {
-            handleSave({ ...task, task: e.target.value });
+            setText(e.target.value);
+          }}
+          onBlur={() => {
+            handleSave({ ...task, task: text });
           }}
         />
       </td>
@@ -145,59 +157,5 @@ const TaskCell = ({
     </tr>
   );
 };
-
-function updateElapsedTime(
-  task: Task,
-  timeValue: number,
-  taskData: Task[]
-): Task[] {
-  // Helper function to update the elapsed time of a task or subtask recursively
-  function updateTaskTime(tasks: Task[]): Task[] {
-    return tasks.map((t) => {
-      if (t.id === task.id) {
-        // Update the elapsed time of the target task
-        return { ...t, elapsedTime: timeValue };
-      } else if (t.subTasks && t.subTasks.length > 0) {
-        // Update the subtasks recursively if present
-        return { ...t, subTasks: updateTaskTime(t.subTasks) };
-      }
-      return t;
-    });
-  }
-
-  // Create a new tree by updating the elapsed time of the specified task
-  const updatedTaskData = updateTaskTime(taskData);
-
-  return updatedTaskData;
-}
-
-function updateOrCreateTask(task: Partial<Task>, taskData: Task[]): Task[] {
-  const defaultTask = { task: "Untitled", elapsedTime: 0, id: uniqId };
-  let foundTarget = false;
-  // Helper function to update the elapsed time of a task or subtask recursively
-  function updateTask(tasks: Task[]): Task[] {
-    return tasks.map((t) => {
-      if (t.id === task.id) {
-        // Update the elapsed time of the target task
-        foundTarget = true;
-        return { ...t, ...task };
-      } else if (t.subTasks && t.subTasks.length > 0) {
-        // Update the subtasks recursively if present
-        return { ...t, subTasks: updateTask(t.subTasks) };
-      }
-      return t;
-    });
-  }
-
-  // Create a new tree by updating the elapsed time of the specified task
-  const updatedTaskData = updateTask(taskData);
-
-  if (!foundTarget) {
-    updatedTaskData.push({ ...defaultTask, ...task });
-    uniqId++;
-  }
-
-  return updatedTaskData;
-}
 
 export default App;

@@ -1,6 +1,6 @@
-import { Task } from "../types/core";
+import { TaskWithOptionalId } from "../db";
 
-export function calculateTotalElapsedTime(task: Task) {
+export function calculateTotalElapsedTime(task: TaskWithOptionalId) {
   let totalTime = task.elapsedTime;
 
   if (task.subTasks && task.subTasks.length > 0) {
