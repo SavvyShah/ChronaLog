@@ -6,9 +6,9 @@ export function calculateTimeDifference(secondsPassed: number) {
   const seconds = secondsPassed % 60;
 
   // Format the result as "HHhr MMmin SSs"
-  const formattedTimeDifference = `${padWithZero(hours)}: ${padWithZero(
+  const formattedTimeDifference = `${padWithZero(hours)} : ${padWithZero(
     minutes
-  )}: ${padWithZero(seconds)}`;
+  )} : ${padWithZero(seconds)}`;
 
   return formattedTimeDifference;
 }
