@@ -1,4 +1,4 @@
-import { HiPauseCircle, HiPlayCircle } from "react-icons/hi2";
+import { HiPauseCircle, HiPlayCircle, HiStopCircle } from "react-icons/hi2";
 import { calculateTotalElapsedTime } from "./utils/calculateTotalElapsedTime";
 import { calculateTimeDifference } from "./utils/calculateTimeDifference";
 import { useState } from "react";
@@ -35,6 +35,9 @@ function App() {
     setActiveTask(task);
     setTicking(true);
   };
+  const handleEndTask = (task: Task) => {
+    console.log("TODO");
+  };
 
   return (
     <div>
@@ -66,12 +69,28 @@ function App() {
         </table>
         <div>
           {activeTask ? (
-            <div>
+            <div className="text-2xl">
               <div>Current: {activeTask.task}</div>
               <div>
                 Stopwatch: <Timer active={ticking} />
               </div>
-              <HiPauseCircle onClick={() => setTicking(false)} />
+              <div className="flex">
+                {ticking ? (
+                  <HiPauseCircle
+                    className="p-1 text-5xl"
+                    onClick={() => setTicking(false)}
+                  />
+                ) : (
+                  <HiPlayCircle
+                    className="p-1 text-5xl"
+                    onClick={() => setTicking(true)}
+                  />
+                )}
+                <HiStopCircle
+                  className="p-1 text-5xl"
+                  onClick={handleEndTask}
+                />
+              </div>
             </div>
           ) : null}
         </div>
