@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { HiPauseCircle, HiPlayCircle } from "react-icons/hi2";
 import { calculateTimeDifference } from "../utils/calculateTimeDifference";
 
-export const Timer = () => {
+interface Props {
+  active: boolean;
+}
+
+export const Timer = ({ active }: Props) => {
   const [count, setCount] = useState(0);
-  const [active, setIsActive] = useState<boolean>(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -19,16 +21,5 @@ export const Timer = () => {
     }
   }, [active, count]);
 
-  return (
-    <div>
-      <div>{calculateTimeDifference(count)}</div>
-      <div>
-        {active ? (
-          <HiPauseCircle onClick={() => setIsActive(false)} />
-        ) : (
-          <HiPlayCircle onClick={() => setIsActive(true)} />
-        )}
-      </div>
-    </div>
-  );
+  return calculateTimeDifference(count);
 };

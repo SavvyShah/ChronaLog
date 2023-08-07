@@ -1,10 +1,13 @@
-import { HiPlayCircle } from "react-icons/hi2";
+import { HiPauseCircle, HiPlayCircle } from "react-icons/hi2";
 import { calculateTotalElapsedTime } from "./utils/calculateTotalElapsedTime";
 import { calculateTimeDifference } from "./utils/calculateTimeDifference";
+import { useState } from "react";
+import { Task } from "./types/core";
+import { Timer } from "./components/Timer";
 
 const taskData = [
   {
-    task: "Main Task",
+    task: "Main Task 1",
     elapsedTime: 3600, // 1 hour (3600 seconds)
     subTasks: [
       {
@@ -18,13 +21,21 @@ const taskData = [
     ],
   },
   {
-    task: "Main Task",
+    task: "Main Task 2",
     elapsedTime: 3600, // 1 hour (3600 seconds)
     subTasks: [],
   },
 ];
 
 function App() {
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [ticking, setTicking] = useState<boolean>(false);
+
+  const handleStartTask = (task: Task) => {
+    setActiveTask(task);
+    setTicking(true);
+  };
+
   return (
     <div>
       <div className="p-10">
@@ -44,12 +55,26 @@ function App() {
                   {calculateTimeDifference(calculateTotalElapsedTime(task))}
                 </td>
                 <td className="p-4">
-                  <HiPlayCircle className="hover:text-green-500 text-2xl" />
+                  <HiPlayCircle
+                    onClick={() => handleStartTask(task)}
+                    className="hover:text-green-500 text-2xl"
+                  />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        <div>
+          {activeTask ? (
+            <div>
+              <div>Current: {activeTask.task}</div>
+              <div>
+                Stopwatch: <Timer active={ticking} />
+              </div>
+              <HiPauseCircle onClick={() => setTicking(false)} />
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
