@@ -1,4 +1,6 @@
 import {
+  HiArrowLeft,
+  HiChevronDoubleRight,
   HiPauseCircle,
   HiPlayCircle,
   HiPlus,
@@ -10,21 +12,35 @@ import { useEffect, useRef, useState } from "react";
 import { EditableInput } from "./components/EditableInput";
 import { TaskWithOptionalId, db } from "./db";
 import { useLiveQuery } from "dexie-react-hooks";
+import { Link, useParams } from "react-router-dom";
 
 function App() {
   const [activeTask, setActiveTask] = useState<TaskWithOptionalId | null>(null);
   const [ticking, setTicking] = useState<boolean>(false);
   const [count, setCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { parentId } = useParams<{ parentId?: string }>();
   const taskTable = db.tasks;
+
   const tasks = useLiveQuery(async () => {
     //
     // Query the DB using our promise based API.
     // The end result will magically become
     // observable.
     //
-    return await taskTable.toArray();
-  });
+    if (parentId) {
+      return await taskTable
+        .filter((task) => task.parentId === Number(parentId))
+        .toArray();
+    }
+    return await taskTable.filter((task) => !task.parentId).toArray();
+  }, [parentId]);
+  const parentTask = useLiveQuery(async () => {
+    if (parentId) {
+      return await taskTable.get(Number(parentId));
+    }
+    return null;
+  }, [parentId]);
 
   useEffect(() => {
     if (!intervalRef.current) {
@@ -56,11 +72,37 @@ function App() {
   };
   const handleSave = async (task: Partial<TaskWithOptionalId>) => {
     const defaultTask = { task: "Untitled", elapsedTime: 0 };
+    if (parentId) {
+      const parentTask = await taskTable.get(Number(parentId));
+      const childId = (await taskTable.put({
+        ...defaultTask,
+        ...task,
+        parentId: Number(parentId),
+      })) as number;
+      if (parentTask) {
+        const subTasks = parentTask.subTasks || [];
+        await taskTable.put({
+          ...parentTask,
+          subTasks: [...subTasks, childId],
+        });
+      }
+
+      return;
+    }
     await taskTable.put({ ...defaultTask, ...task });
   };
 
   return (
     <div>
+      {parentTask ? (
+        <Link
+          className="m-2 text-2xl flex items-center"
+          to={parentTask.parentId ? `/task/${parentTask.parentId}` : "/"}
+        >
+          <HiArrowLeft className="inline-block me-1" />
+          Back
+        </Link>
+      ) : null}
       <div className="p-10">
         <table className="w-full border-collapse border border-gray-400">
           <thead>
@@ -148,11 +190,14 @@ const TaskCell = ({
       <td className="p-4">
         {calculateTimeDifference(calculateTotalElapsedTime(task))}
       </td>
-      <td className="p-4">
+      <td className="p-4 flex">
         <HiPlayCircle
           onClick={() => handleStartTask(task)}
-          className="hover:text-green-500 text-2xl"
+          className="hover:text-green-500 text-3xl me-1"
         />
+        <Link to={`/task/${task.id}`} className="decoration-none text-inherit">
+          <HiChevronDoubleRight className="hover:text-green-500 text-3xl me-1" />
+        </Link>
       </td>
     </tr>
   );

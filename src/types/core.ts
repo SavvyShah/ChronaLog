@@ -1,6 +1,9 @@
+type ID = number;
+
 export interface Task {
   task: string;
-  id: number;
+  id: ID;
   elapsedTime: number;
-  subTasks?: Task[];
+  parentId?: ID;
+  subTasks?: ID[];
 }

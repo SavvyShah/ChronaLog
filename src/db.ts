@@ -12,7 +12,7 @@ export class Achievo extends Dexie {
   constructor() {
     super("Achievo");
     this.version(2).stores({
-      tasks: "++id, task", // Primary key and indexed props
+      tasks: "++id, task, parentId", // Primary key and indexed props
     });
   }
 }
