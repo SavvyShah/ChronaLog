@@ -1,20 +1,20 @@
 {
-  "name": "achievo",
+  "name": "chronalog",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "keywords": [],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SavvyShah/Achievo.git"
+    "url": "git+https://github.com/SavvyShah/ChronaLog.git"
   },
   "engines": {
     "node": "^18.0.0"
   },
   "bugs": {
-    "url": "https://github.com/SavvyShah/Achievo/issues"
+    "url": "https://github.com/SavvyShah/ChronaLog/issues"
   },
-  "homepage": "https://github.com/SavvyShah/Achievo#readme",
+  "homepage": "https://github.com/SavvyShah/ChronaLog#readme",
   "author": {
     "name": "Shubham Shah"
   },
