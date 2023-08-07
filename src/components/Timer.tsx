@@ -1,39 +1,47 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { HiPauseCircle, HiPlayCircle } from "react-icons/hi2";
 
-interface Props {
-  start: Date;
-}
-
-export const Timer = ({ start }: Props) => {
-  const [timeDifference, setTimeDifference] = useState<string>(
-    calculateTimeDifference(start)
-  );
+export const Timer = () => {
+  const [count, setCount] = useState(0);
+  const [active, setIsActive] = useState<boolean>(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    setInterval(() => {
-      setTimeDifference(calculateTimeDifference(start));
-    }, 1000);
-  }, [start]);
+    if (!intervalRef.current) {
+      intervalRef.current = setInterval(() => {
+        setCount((c) => c + 1);
+      }, 1000);
+    }
+    if (!active) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [active, count]);
 
-  return <div>{timeDifference}</div>;
+  return (
+    <div>
+      <div>{calculateTimeDifference(count)}</div>
+      <div>
+        {active ? (
+          <HiPauseCircle onClick={() => setIsActive(false)} />
+        ) : (
+          <HiPlayCircle onClick={() => setIsActive(true)} />
+        )}
+      </div>
+    </div>
+  );
 };
-function calculateTimeDifference(start: Date) {
-  const now = new Date();
+function calculateTimeDifference(secondsPassed: number) {
+  // Convert seconds to hours, minutes, and seconds
+  const hours = Math.floor(secondsPassed / 3600);
+  secondsPassed %= 3600;
+  const minutes = Math.floor(secondsPassed / 60);
+  const seconds = secondsPassed % 60;
 
-  // Calculate the time difference in milliseconds
-  let timeDifference = now.getTime() - start.getTime();
-
-  // Convert the time difference to hours, minutes, and seconds
-  const hours = Math.floor(timeDifference / (1000 * 60 * 60));
-  timeDifference -= hours * (1000 * 60 * 60);
-  const minutes = Math.floor(timeDifference / (1000 * 60));
-  timeDifference -= minutes * (1000 * 60);
-  const seconds = Math.floor(timeDifference / 1000);
-
-  // Format the result as HH:MM:SS
-  const formattedTimeDifference = `${padWithZero(hours)}:${padWithZero(
+  // Format the result as "HHhr MMmin SSs"
+  const formattedTimeDifference = `${padWithZero(hours)}: ${padWithZero(
     minutes
-  )}:${padWithZero(seconds)}`;
+  )}: ${padWithZero(seconds)}`;
 
   return formattedTimeDifference;
 }
