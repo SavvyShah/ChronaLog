@@ -20,6 +20,7 @@ import { parseTimeToSeconds } from "./utils/parseTimeToSeconds";
 function App() {
   const [activeTask, setActiveTask] = useState<TaskWithOptionalId | null>(null);
   const [ticking, setTicking] = useState<boolean>(false);
+  const [startTime, setStartTime] = useState<Date>(new Date());
   const [count, setCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { parentId } = useParams<{ parentId?: string }>();
@@ -48,18 +49,24 @@ function App() {
   useEffect(() => {
     if (!intervalRef.current) {
       intervalRef.current = setInterval(() => {
-        setCount((c) => c + 1);
+        const now = new Date();
+        const seconds = Math.floor(
+          (now.getTime() - startTime.getTime()) / 1000
+        );
+        setCount(seconds);
       }, 1000);
     }
     if (!ticking) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  }, [ticking, count]);
+  }, [ticking, startTime]);
 
   const handleStartTask = (task: TaskWithOptionalId) => {
     setActiveTask(task);
     setTicking(true);
+    setStartTime(new Date());
+    setCount(0);
   };
 
   const handleEndTask = async () => {
@@ -72,6 +79,7 @@ function App() {
     setActiveTask(null);
     setTicking(false);
     setCount(0);
+    setStartTime(new Date());
   };
   const handleSave = async (task: Partial<TaskWithOptionalId>) => {
     const defaultTask = { task: "Untitled", elapsedTime: 0 };
