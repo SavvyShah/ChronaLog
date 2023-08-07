@@ -1,4 +1,28 @@
 import { HiPlayCircle } from "react-icons/hi2";
+import { calculateTotalElapsedTime } from "./utils/calculateTotalElapsedTime";
+import { calculateTimeDifference } from "./utils/calculateTimeDifference";
+
+const taskData = [
+  {
+    task: "Main Task",
+    elapsedTime: 3600, // 1 hour (3600 seconds)
+    subTasks: [
+      {
+        task: "Subtask 1",
+        elapsedTime: 1800, // 30 minutes (1800 seconds)
+      },
+      {
+        task: "Subtask 2",
+        elapsedTime: 900, // 15 minutes (900 seconds)
+      },
+    ],
+  },
+  {
+    task: "Main Task",
+    elapsedTime: 3600, // 1 hour (3600 seconds)
+    subTasks: [],
+  },
+];
 
 function App() {
   return (
@@ -13,27 +37,17 @@ function App() {
             </tr>
           </thead>
           <tbody>
-            <tr className="hover:bg-slate-200">
-              <td className="p-4">Household: grocery</td>
-              <td className="p-4">00:30:00</td>
-              <td className="p-4">
-                <HiPlayCircle className="hover:text-green-500 text-2xl" />
-              </td>
-            </tr>
-            <tr className="hover:bg-slate-200">
-              <td className="p-4">Work: Make a sales call</td>
-              <td className="p-4">00:35:00</td>
-              <td className="p-4">
-                <HiPlayCircle className="hover:text-green-500 text-2xl" />
-              </td>
-            </tr>
-            <tr className="hover:bg-slate-200">
-              <td className="p-4">Read: Adventures of huckleberry finn</td>
-              <td className="p-4">01:15:35</td>
-              <td className="p-4">
-                <HiPlayCircle className="hover:text-green-500 text-2xl" />
-              </td>
-            </tr>
+            {taskData.map((task) => (
+              <tr className="hover:bg-slate-200">
+                <td className="p-4">{task.task}</td>
+                <td className="p-4">
+                  {calculateTimeDifference(calculateTotalElapsedTime(task))}
+                </td>
+                <td className="p-4">
+                  <HiPlayCircle className="hover:text-green-500 text-2xl" />
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
