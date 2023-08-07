@@ -1,5 +1,6 @@
 import {
   HiArrowLeft,
+  HiArrowPath,
   HiChevronDoubleRight,
   HiPauseCircle,
   HiPlayCircle,
@@ -81,10 +82,12 @@ function App() {
       })) as number;
       if (parentTask) {
         const subTasks = parentTask.subTasks || [];
-        await taskTable.put({
-          ...parentTask,
-          subTasks: [...subTasks, childId],
-        });
+        if (!subTasks.includes(childId)) {
+          await taskTable.put({
+            ...parentTask,
+            subTasks: [...subTasks, childId],
+          });
+        }
       }
 
       return;
@@ -107,9 +110,9 @@ function App() {
         <table className="w-full border-collapse border border-gray-400">
           <thead>
             <tr className="bg-gray-200">
-              <th className="p-4 text-left">Task</th>
-              <th className="p-4 text-left">Time spent</th>
-              <th className="p-4 text-left"></th>
+              <th className="p-4 text-left w-3/5">Task</th>
+              <th className="p-4 text-left w-1/5">Time spent</th>
+              <th className="p-4 text-left w-1/5"></th>
             </tr>
           </thead>
           <tbody>
@@ -126,10 +129,10 @@ function App() {
         <div>
           <button
             type="button"
-            className="mt-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+            className="m-2 flex items-center mt-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
             onClick={() => handleSave({ task: "Untitled" })}
           >
-            <HiPlus className="inline-block" />
+            <HiPlus className="inline-block me-1" />
             Add task
           </button>
         </div>
@@ -173,10 +176,13 @@ const TaskCell = ({
   handleSave: (task: Partial<TaskWithOptionalId>) => void;
 }) => {
   const [text, setText] = useState(task.task);
+  const timeString = useLiveQuery(async () => {
+    return calculateTimeDifference(await calculateTotalElapsedTime(task));
+  }, [task]);
 
   return (
     <tr className="hover:bg-slate-200">
-      <td className="p-4">
+      <td className="p-4 w-3/5">
         <EditableInput
           value={text}
           onChange={(e) => {
@@ -187,17 +193,24 @@ const TaskCell = ({
           }}
         />
       </td>
-      <td className="p-4">
-        {calculateTimeDifference(calculateTotalElapsedTime(task))}
-      </td>
-      <td className="p-4 flex">
-        <HiPlayCircle
-          onClick={() => handleStartTask(task)}
-          className="hover:text-green-500 text-3xl me-1"
-        />
-        <Link to={`/task/${task.id}`} className="decoration-none text-inherit">
-          <HiChevronDoubleRight className="hover:text-green-500 text-3xl me-1" />
-        </Link>
+      <td className="p-4 w-1/5">{timeString}</td>
+      <td className="p-4 w-1/5">
+        <div className="flex w-full justify-center items-center">
+          <HiPlayCircle
+            onClick={() => handleStartTask(task)}
+            className="hover:text-green-500 text-3xl me-1"
+          />
+          <HiArrowPath
+            onClick={() => handleSave({ ...task, elapsedTime: 0 })}
+            className="hover:text-green-500 text-3xl me-1"
+          />
+          <Link
+            to={`/task/${task.id}`}
+            className="decoration-none text-inherit"
+          >
+            <HiChevronDoubleRight className="hover:text-green-500 text-3xl me-1" />
+          </Link>
+        </div>
       </td>
     </tr>
   );
