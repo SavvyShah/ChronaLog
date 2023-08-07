@@ -15,6 +15,7 @@ import { EditableInput } from "./components/EditableInput";
 import { TaskWithOptionalId, db } from "./db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Link, useParams } from "react-router-dom";
+import { parseTimeToSeconds } from "./utils/parseTimeToSeconds";
 
 function App() {
   const [activeTask, setActiveTask] = useState<TaskWithOptionalId | null>(null);
@@ -215,6 +216,7 @@ const TaskCell = ({
   const timeString = useLiveQuery(async () => {
     return calculateTimeDifference(await calculateTotalElapsedTime(task));
   }, [task]);
+  const [timeElapsed, setTimeElapsed] = useState(timeString);
 
   return (
     <tr className="hover:bg-slate-200">
@@ -229,7 +231,17 @@ const TaskCell = ({
           }}
         />
       </td>
-      <td className="p-4 w-1/5">{timeString}</td>
+      <td className="p-4 w-1/5">
+        <EditableInput
+          value={timeElapsed || timeString || ""}
+          onChange={(e) => setTimeElapsed(e.target.value)}
+          onBlur={(e) => {
+            const elapsedTime = parseTimeToSeconds(e.target.value);
+            handleSave({ ...task, elapsedTime });
+            setTimeElapsed("");
+          }}
+        />
+      </td>
       <td className="p-4 w-1/5">
         <div className="flex w-full justify-center items-center">
           <HiPlayCircle
