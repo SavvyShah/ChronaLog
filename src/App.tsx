@@ -6,6 +6,7 @@ import {
   HiPlayCircle,
   HiPlus,
   HiStopCircle,
+  HiTrash,
 } from "react-icons/hi2";
 import { calculateTotalElapsedTime } from "./utils/calculateTotalElapsedTime";
 import { calculateTimeDifference } from "./utils/calculateTimeDifference";
@@ -80,6 +81,7 @@ function App() {
         ...task,
         parentId: Number(parentId),
       })) as number;
+
       if (parentTask) {
         const subTasks = parentTask.subTasks || [];
         if (!subTasks.includes(childId)) {
@@ -93,6 +95,37 @@ function App() {
       return;
     }
     await taskTable.put({ ...defaultTask, ...task });
+  };
+  const handleDelete = async (id: number) => {
+    const task = await taskTable.get(id);
+    if (task) {
+      if (task.parentId) {
+        const parentTask = await taskTable.get(task.parentId);
+        if (parentTask) {
+          await taskTable.put({
+            ...parentTask,
+            subTasks: parentTask.subTasks?.filter((t) => t !== id),
+          });
+        }
+      }
+      if (task.subTasks) {
+        const deleteRecursive = async (subTaskId: number) => {
+          const subTask = await taskTable.get(subTaskId);
+          if (subTask && subTask.subTasks) {
+            subTask.subTasks.forEach((subTaskId) => {
+              deleteRecursive(subTaskId);
+            });
+          }
+          taskTable.delete(subTaskId);
+        };
+        await Promise.all(
+          task.subTasks.map(async (subTaskId) => {
+            await deleteRecursive(subTaskId);
+          })
+        );
+      }
+      await taskTable.delete(id);
+    }
   };
 
   return (
@@ -122,6 +155,7 @@ function App() {
                 task={task}
                 handleStartTask={handleStartTask}
                 handleSave={handleSave}
+                handleDelete={handleDelete}
               />
             ))}
           </tbody>
@@ -170,10 +204,12 @@ const TaskCell = ({
   task,
   handleStartTask,
   handleSave,
+  handleDelete,
 }: {
   task: TaskWithOptionalId;
   handleStartTask: (task: TaskWithOptionalId) => void;
   handleSave: (task: Partial<TaskWithOptionalId>) => void;
+  handleDelete: (id: number) => void;
 }) => {
   const [text, setText] = useState(task.task);
   const timeString = useLiveQuery(async () => {
@@ -198,17 +234,27 @@ const TaskCell = ({
         <div className="flex w-full justify-center items-center">
           <HiPlayCircle
             onClick={() => handleStartTask(task)}
-            className="hover:text-green-500 text-3xl me-1"
+            className="hover:text-blue-500 text-3xl me-1"
           />
           <HiArrowPath
             onClick={() => handleSave({ ...task, elapsedTime: 0 })}
-            className="hover:text-green-500 text-3xl me-1"
+            className="hover:text-blue-500 text-3xl me-1"
+          />
+          <HiTrash
+            onClick={() =>
+              task.id &&
+              window.confirm(
+                "Are you sure you want to delete? This is irreversible and all the sub-tasks with tracked time will be deleted"
+              ) &&
+              handleDelete(task.id)
+            }
+            className="hover:text-rose-700 text-3xl me-1"
           />
           <Link
             to={`/task/${task.id}`}
             className="decoration-none text-inherit"
           >
-            <HiChevronDoubleRight className="hover:text-green-500 text-3xl me-1" />
+            <HiChevronDoubleRight className="hover:text-blue-500 text-3xl me-1" />
           </Link>
         </div>
       </td>
