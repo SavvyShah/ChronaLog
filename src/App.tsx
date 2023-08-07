@@ -123,17 +123,14 @@ const TaskCell = ({
   handleStartTask: (task: Task) => void;
   handleSave: (task: Partial<Task>) => void;
 }) => {
-  const [text, setText] = useState(task.task);
-
   return (
     <tr className="hover:bg-slate-200">
       <td className="p-4">
         <EditableInput
-          value={text}
+          value={task.task}
           onChange={(e) => {
-            setText(e.target.value);
+            handleSave({ ...task, task: e.target.value });
           }}
-          onBlur={() => handleSave({ ...task, task: text })}
         />
       </td>
       <td className="p-4">

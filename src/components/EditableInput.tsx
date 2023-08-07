@@ -25,7 +25,7 @@ export const EditableInput = ({ value, onChange, onBlur }: Props) => {
   } else {
     return (
       <div onClick={() => setEditing(true)} className="w-full h-full">
-        {value}
+        {value || "(Name of task is empty)"}
       </div>
     );
   }
