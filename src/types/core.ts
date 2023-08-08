@@ -4,6 +4,6 @@ export interface Task {
   task: string;
   id: ID;
   elapsedTime: number;
-  parentId?: ID;
+  parentID?: ID;
   subTasks?: ID[];
 }

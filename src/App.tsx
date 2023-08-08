@@ -23,7 +23,7 @@ function App() {
   const [startTime, setStartTime] = useState<Date>(new Date());
   const [count, setCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const { parentId } = useParams<{ parentId?: string }>();
+  const { parentID } = useParams<{ parentID?: string }>();
   const taskTable = db.tasks;
 
   const tasks = useLiveQuery(async () => {
@@ -32,19 +32,19 @@ function App() {
     // The end result will magically become
     // observable.
     //
-    if (parentId) {
+    if (parentID) {
       return await taskTable
-        .filter((task) => task.parentId === Number(parentId))
+        .filter((task) => task.parentID === Number(parentID))
         .toArray();
     }
-    return await taskTable.filter((task) => !task.parentId).toArray();
-  }, [parentId]);
+    return await taskTable.filter((task) => !task.parentID).toArray();
+  }, [parentID]);
   const parentTask = useLiveQuery(async () => {
-    if (parentId) {
-      return await taskTable.get(Number(parentId));
+    if (parentID) {
+      return await taskTable.get(Number(parentID));
     }
     return null;
-  }, [parentId]);
+  }, [parentID]);
 
   useEffect(() => {
     if (!intervalRef.current) {
@@ -83,12 +83,12 @@ function App() {
   };
   const handleSave = async (task: Partial<TaskWithOptionalId>) => {
     const defaultTask = { task: "Untitled", elapsedTime: 0 };
-    if (parentId) {
-      const parentTask = await taskTable.get(Number(parentId));
+    if (parentID) {
+      const parentTask = await taskTable.get(Number(parentID));
       const childId = (await taskTable.put({
         ...defaultTask,
         ...task,
-        parentId: Number(parentId),
+        parentID: Number(parentID),
       })) as number;
 
       if (parentTask) {
@@ -108,8 +108,8 @@ function App() {
   const handleDelete = async (id: number) => {
     const task = await taskTable.get(id);
     if (task) {
-      if (task.parentId) {
-        const parentTask = await taskTable.get(task.parentId);
+      if (task.parentID) {
+        const parentTask = await taskTable.get(task.parentID);
         if (parentTask) {
           await taskTable.put({
             ...parentTask,
@@ -142,7 +142,7 @@ function App() {
       {parentTask ? (
         <Link
           className="m-2 text-2xl flex items-center"
-          to={parentTask.parentId ? `/task/${parentTask.parentId}` : "/"}
+          to={parentTask.parentID ? `/task/${parentTask.parentID}` : "/"}
         >
           <HiArrowLeft className="inline-block me-1" />
           Back

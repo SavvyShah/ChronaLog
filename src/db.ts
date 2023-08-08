@@ -12,7 +12,7 @@ export class ChronaLog extends Dexie {
   constructor() {
     super("ChronaLog");
     this.version(2).stores({
-      tasks: "++id, task, parentId", // Primary key and indexed props
+      tasks: "++id, task, parentID", // Primary key and indexed props
     });
   }
 }

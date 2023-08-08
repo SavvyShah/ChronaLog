@@ -8,7 +8,11 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
+dist/assets
+dist/favicon.svg
+dist/index.html
+dist/**/*.js
+dist/**/*.css
 dist-ssr
 *.local
 
