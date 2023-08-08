@@ -82,7 +82,7 @@ function App() {
     setStartTime(new Date());
   };
   const handleSave = async (task: Partial<TaskWithOptionalId>) => {
-    const defaultTask = { task: "Untitled", elapsedTime: 0 };
+    const defaultTask = { name: "Untitled", elapsedTime: 0 };
     if (parentID) {
       const parentTask = await taskTable.get(Number(parentID));
       const childId = (await taskTable.put({
@@ -173,7 +173,7 @@ function App() {
           <button
             type="button"
             className="m-2 flex items-center mt-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-            onClick={() => handleSave({ task: "Untitled" })}
+            onClick={() => handleSave({ name: "Untitled" })}
           >
             <HiPlus className="inline-block me-1" />
             Add task
@@ -182,7 +182,7 @@ function App() {
         <div>
           {activeTask ? (
             <div className="text-2xl select-none">
-              <div>Current: {activeTask.task}</div>
+              <div>Current: {activeTask.name}</div>
               <div>Stopwatch: {calculateTimeDifference(count)}</div>
               <div className="flex">
                 {ticking ? (
@@ -220,7 +220,7 @@ const TaskCell = ({
   handleSave: (task: Partial<TaskWithOptionalId>) => void;
   handleDelete: (id: number) => void;
 }) => {
-  const [text, setText] = useState(task.task);
+  const [text, setText] = useState(task.name);
   const timeString = useLiveQuery(async () => {
     return calculateTimeDifference(await calculateTotalElapsedTime(task));
   }, [task]);
@@ -235,7 +235,7 @@ const TaskCell = ({
             setText(e.target.value);
           }}
           onBlur={() => {
-            handleSave({ ...task, task: text });
+            handleSave({ ...task, name: text });
           }}
         />
       </td>

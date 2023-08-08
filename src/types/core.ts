@@ -1,9 +1,21 @@
 type ID = number;
 
 export interface Task {
-  task: string;
+  name: string;
   id: ID;
   elapsedTime: number;
   parentID?: ID;
   subTasks?: ID[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface Log {
+  name: string;
+  id: ID;
+  elapsedTime: number;
+  parentID?: ID;
+  createdAt?: Date;
+  updatedAt?: Date;
+  tags?: string[];
 }
