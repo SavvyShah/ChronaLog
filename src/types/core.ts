@@ -6,6 +6,7 @@ export interface Task {
   elapsedTime: number;
   parentID?: ID;
   subTasks?: ID[];
+  logs?: ID[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -14,7 +15,7 @@ export interface Log {
   name: string;
   id: ID;
   elapsedTime: number;
-  parentID?: ID;
+  parentID: ID;
   createdAt?: Date;
   updatedAt?: Date;
   tags?: string[];
