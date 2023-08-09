@@ -1,6 +1,7 @@
 import {
   HiArrowLeft,
   HiChevronDoubleRight,
+  HiDocument,
   HiPauseCircle,
   HiPlayCircle,
   HiPlus,
@@ -14,6 +15,7 @@ import { EditableInput } from "./components/EditableInput";
 import {
   LogWithOptionalId,
   TaskWithOptionalId,
+  createLog,
   createTask,
   deleteLog,
   deleteTask,
@@ -26,8 +28,8 @@ import { Link, useParams } from "react-router-dom";
 import { parseTimeToSeconds } from "./utils/parseTimeToSeconds";
 
 function App() {
-  const [activeTask, setActiveTask] = useState<TaskWithOptionalId | null>(null);
   const [ticking, setTicking] = useState<boolean>(false);
+  const [showStopWatch, setShowStopwatch] = useState<boolean>(false);
   const [startTime, setStartTime] = useState<Date>(new Date());
   const [count, setCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -52,23 +54,26 @@ function App() {
     }
   }, [ticking, startTime]);
 
-  const handleStartTask = (task: TaskWithOptionalId) => {
-    setActiveTask(task);
+  const handleStartTask = () => {
     setTicking(true);
     setStartTime(new Date());
     setCount(0);
+    setShowStopwatch(true);
   };
 
   const handleEndTask = async () => {
-    if (activeTask && activeTask.id) {
-      await updateTask(activeTask.id, {
-        ...activeTask,
-        elapsedTime: activeTask.elapsedTime + count,
-      });
+    if (parentID) {
+      await createLog(
+        {
+          name: "Untitled",
+          elapsedTime: count,
+        },
+        Number(parentID)
+      );
     }
-    setActiveTask(null);
     setTicking(false);
     setCount(0);
+    setShowStopwatch(false);
     setStartTime(new Date());
   };
 
@@ -94,11 +99,7 @@ function App() {
           </thead>
           <tbody>
             {tasks?.map((task) => (
-              <TaskCell
-                key={task.id}
-                task={task}
-                handleStartTask={handleStartTask}
-              />
+              <TaskCell key={task.id} task={task} />
             ))}
             {logs?.map((log) => (
               <LogCell key={log.id} log={log} />
@@ -116,11 +117,21 @@ function App() {
             <HiPlus className="inline-block me-1" />
             Add task
           </button>
+          {showStopWatch ? null : (
+            <button
+              onClick={() => handleStartTask()}
+              type="button"
+              disabled={parentID ? false : true}
+              style={{ opacity: parentID ? 1 : 0.5 }}
+              className="m-2 flex items-center mt-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+            >
+              <HiPlayCircle className="text-3xl me-1" /> Start Timer
+            </button>
+          )}
         </div>
         <div>
-          {activeTask ? (
+          {showStopWatch ? (
             <div className="text-2xl select-none">
-              <div>Current: {activeTask.name}</div>
               <div>Stopwatch: {calculateTimeDifference(count)}</div>
               <div className="flex">
                 {ticking ? (
@@ -147,13 +158,7 @@ function App() {
   );
 }
 
-const TaskCell = ({
-  task,
-  handleStartTask,
-}: {
-  task: TaskWithOptionalId;
-  handleStartTask: (task: TaskWithOptionalId) => void;
-}) => {
+const TaskCell = ({ task }: { task: TaskWithOptionalId }) => {
   const [text, setText] = useState(task.name);
 
   return (
@@ -165,17 +170,13 @@ const TaskCell = ({
             setText(e.target.value);
           }}
           onBlur={() => {
-            if (task.id) updateTask(task.id, { ...task, name: text });
+            if (task.id) updateTask(task.id, { name: text });
           }}
         />
       </td>
       <td className="p-4 w-1/5">{calculateTimeDifference(task.elapsedTime)}</td>
       <td className="p-4 w-1/5">
         <div className="flex w-full justify-center items-center">
-          <HiPlayCircle
-            onClick={() => handleStartTask(task)}
-            className="hover:text-blue-500 text-3xl me-1"
-          />
           <HiTrash
             onClick={() =>
               task.id &&
@@ -206,7 +207,8 @@ const LogCell = ({ log }: { log: LogWithOptionalId }) => {
 
   return (
     <tr className="hover:bg-slate-200">
-      <td className="p-4 w-3/5">
+      <td className="p-4 w-3/5 flex w-100 items-center">
+        <HiDocument className="m-2" />
         <EditableInput
           value={text}
           onChange={(e) => {
@@ -214,7 +216,7 @@ const LogCell = ({ log }: { log: LogWithOptionalId }) => {
           }}
           onBlur={() => {
             if (log.id) {
-              updateLog(log.id, { ...log, name: text });
+              updateLog(log.id, { name: text });
             }
           }}
         />
@@ -225,7 +227,10 @@ const LogCell = ({ log }: { log: LogWithOptionalId }) => {
           onChange={(e) => setTimeElapsed(e.target.value)}
           onBlur={(e) => {
             const elapsedTime = parseTimeToSeconds(e.target.value);
-            if (log.id) updateLog(log.id, { ...log, elapsedTime });
+            if (log.id)
+              updateLog(log.id, {
+                elapsedTime: elapsedTime - log.elapsedTime,
+              });
             setTimeElapsed("");
           }}
         />
