@@ -2,6 +2,7 @@
 import Dexie, { Table } from "dexie";
 import { Log, Task } from "./types/core";
 import { useLiveQuery } from "dexie-react-hooks";
+import { isNumber } from "./utils/isNumber";
 
 export type TaskWithOptionalId = Omit<Task, "id"> & { id?: number };
 export type LogWithOptionalId = Omit<Log, "id"> & { id?: number };
@@ -94,7 +95,7 @@ export const createTask = async (task: Partial<Task>, parentID?: number) => {
 export const updateTask = async (id: number, update: Partial<Task>) => {
   const task = await db.tasks.get(id);
   if (task) {
-    if (update.elapsedTime && task?.parentID) {
+    if (isNumber(update.elapsedTime) && task?.parentID) {
       const parentTask = await db.tasks.get(task.parentID);
       if (parentTask) {
         // current time + new contribution - old contribution
@@ -107,6 +108,9 @@ export const updateTask = async (id: number, update: Partial<Task>) => {
     await db.tasks.update(id, {
       ...update,
       updatedAt: new Date(),
+      elapsedTime: isNumber(update.elapsedTime)
+        ? update.elapsedTime
+        : task.elapsedTime,
     });
   }
 };
@@ -138,6 +142,13 @@ export const deleteTask = async (id: number) => {
       })
     );
   }
+  if (task?.logs) {
+    await Promise.all(
+      task.logs.map(async (logId) => {
+        await db.logs.delete(logId);
+      })
+    );
+  }
   await db.tasks.delete(id);
 };
 
@@ -149,7 +160,7 @@ export const createLog = async (log: Partial<Log>, parentID: number) => {
       const childId = (await db.logs.add({
         ...defaultLog,
         ...log,
-        parentID: Number(parentTask.id),
+        parentID,
         createdAt: new Date(),
         updatedAt: new Date(),
       })) as number;
@@ -158,7 +169,9 @@ export const createLog = async (log: Partial<Log>, parentID: number) => {
       if (!logs.includes(childId)) {
         await updateTask(parentID, {
           logs: [...logs, childId],
-          elapsedTime: parentTask.elapsedTime + (log.elapsedTime || 0),
+          elapsedTime:
+            parentTask.elapsedTime +
+            (isNumber(log.elapsedTime) ? log.elapsedTime : 0),
         });
       }
     }
@@ -171,7 +184,7 @@ export const updateLog = async (id: number, update: Partial<Log>) => {
   const log = await db.logs.get(id);
   if (log) {
     const task = await db.tasks.get(log.parentID);
-    if (update.elapsedTime && task) {
+    if (isNumber(update.elapsedTime) && task) {
       await updateTask(log.parentID, {
         // current + new - old
         elapsedTime: task.elapsedTime + update.elapsedTime - log.elapsedTime,
@@ -180,6 +193,9 @@ export const updateLog = async (id: number, update: Partial<Log>) => {
     await db.logs.update(id, {
       ...update,
       updatedAt: new Date(),
+      elapsedTime: isNumber(update.elapsedTime)
+        ? update.elapsedTime
+        : log.elapsedTime,
     });
   }
 };
