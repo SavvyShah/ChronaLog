@@ -89,27 +89,38 @@ export const createTask = async (task: Partial<Task>, parentID?: number) => {
   });
 };
 /**
- * update.elapsedTime gives the amount of time to change the task by.
+ * update.elapsedTime gives the replacement value for elapsedTime
  */
 export const updateTask = async (id: number, update: Partial<Task>) => {
   const task = await db.tasks.get(id);
-  if (update.elapsedTime && task?.parentID) {
-    await updateTask(task.parentID, { elapsedTime: update.elapsedTime });
+  if (task) {
+    if (update.elapsedTime && task?.parentID) {
+      const parentTask = await db.tasks.get(task.parentID);
+      if (parentTask) {
+        // current time + new contribution - old contribution
+        await updateTask(task.parentID, {
+          elapsedTime:
+            parentTask.elapsedTime + update.elapsedTime - task.elapsedTime,
+        });
+      }
+    }
+    await db.tasks.update(id, {
+      ...update,
+      updatedAt: new Date(),
+    });
   }
-  await db.tasks.update(id, {
-    ...update,
-    updatedAt: new Date(),
-    elapsedTime: (task?.elapsedTime || 0) + (update.elapsedTime || 0),
-  });
 };
 
 export const deleteTask = async (id: number) => {
   const task = await db.tasks.get(id);
   if (task?.parentID) {
-    await updateTask(task.parentID, {
-      subTasks: (task.subTasks || []).filter((subTask) => subTask !== id),
-      elapsedTime: -(task.elapsedTime || 0),
-    });
+    const parentTask = await db.tasks.get(task.parentID);
+    if (parentTask?.id) {
+      await updateTask(parentTask.id, {
+        subTasks: (task.subTasks || []).filter((subTask) => subTask !== id),
+        elapsedTime: parentTask.elapsedTime - task.elapsedTime,
+      });
+    }
   }
   if (task?.subTasks) {
     const deleteRecursive = async (subTaskId: number) => {
@@ -135,7 +146,7 @@ export const createLog = async (log: Partial<Log>, parentID: number) => {
   if (parentID) {
     const parentTask = await db.tasks.get(parentID);
     if (parentTask) {
-      const childId = (await db.logs.put({
+      const childId = (await db.logs.add({
         ...defaultLog,
         ...log,
         parentID: Number(parentTask.id),
@@ -147,7 +158,7 @@ export const createLog = async (log: Partial<Log>, parentID: number) => {
       if (!logs.includes(childId)) {
         await updateTask(parentID, {
           logs: [...logs, childId],
-          elapsedTime: log.elapsedTime || 0,
+          elapsedTime: parentTask.elapsedTime + (log.elapsedTime || 0),
         });
       }
     }
@@ -160,15 +171,15 @@ export const updateLog = async (id: number, update: Partial<Log>) => {
   const log = await db.logs.get(id);
   if (log) {
     const task = await db.tasks.get(log.parentID);
-    if (update.elapsedTime && task?.parentID) {
-      await updateTask(task.parentID, {
-        elapsedTime: update.elapsedTime - (log.elapsedTime || 0),
+    if (update.elapsedTime && task) {
+      await updateTask(log.parentID, {
+        // current + new - old
+        elapsedTime: task.elapsedTime + update.elapsedTime - log.elapsedTime,
       });
     }
     await db.logs.update(id, {
       ...update,
       updatedAt: new Date(),
-      elapsedTime: (log?.elapsedTime || 0) + (update.elapsedTime || 0),
     });
   }
 };
@@ -179,7 +190,8 @@ export const deleteLog = async (id: number) => {
     const task = await db.tasks.get(log.parentID);
     if (task?.logs) {
       await updateTask(log.parentID, {
-        elapsedTime: -(log.elapsedTime || 0),
+        // current + new - old
+        elapsedTime: task.elapsedTime - log.elapsedTime,
         logs: task.logs.filter((logId) => logId !== id),
       });
     }

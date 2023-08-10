@@ -229,7 +229,7 @@ const LogCell = ({ log }: { log: LogWithOptionalId }) => {
             const elapsedTime = parseTimeToSeconds(e.target.value);
             if (log.id)
               updateLog(log.id, {
-                elapsedTime: elapsedTime - log.elapsedTime,
+                elapsedTime,
               });
             setTimeElapsed("");
           }}
