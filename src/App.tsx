@@ -8,8 +8,7 @@ import {
   HiStopCircle,
   HiTrash,
 } from "react-icons/hi2";
-import { calculateTotalElapsedTime } from "./utils/calculateTotalElapsedTime";
-import { calculateTimeDifference } from "./utils/calculateTimeDifference";
+import { formattedTime, formattedTimeHHMMSS } from "./utils/formattedTime";
 import { useEffect, useRef, useState } from "react";
 import { EditableInput } from "./components/EditableInput";
 import {
@@ -23,7 +22,6 @@ import {
   updateTask,
   useTask,
 } from "./db";
-import { useLiveQuery } from "dexie-react-hooks";
 import { Link, useParams } from "react-router-dom";
 import { parseTimeToSeconds } from "./utils/parseTimeToSeconds";
 
@@ -132,7 +130,7 @@ function App() {
         <div>
           {showStopWatch ? (
             <div className="text-2xl select-none">
-              <div>Stopwatch: {calculateTimeDifference(count)}</div>
+              <div>Stopwatch: {formattedTime(count)}</div>
               <div className="flex">
                 {ticking ? (
                   <HiPauseCircle
@@ -174,7 +172,7 @@ const TaskCell = ({ task }: { task: TaskWithOptionalId }) => {
           }}
         />
       </td>
-      <td className="p-4 w-1/5">{calculateTimeDifference(task.elapsedTime)}</td>
+      <td className="p-4 w-1/5">{formattedTime(task.elapsedTime)}</td>
       <td className="p-4 w-1/5">
         <div className="flex w-full justify-center items-center">
           <HiTrash
@@ -200,9 +198,7 @@ const TaskCell = ({ task }: { task: TaskWithOptionalId }) => {
 };
 const LogCell = ({ log }: { log: LogWithOptionalId }) => {
   const [text, setText] = useState(log.name);
-  const timeString = useLiveQuery(async () => {
-    return calculateTimeDifference(await calculateTotalElapsedTime(log));
-  }, [log]);
+  const timeString = formattedTimeHHMMSS(log.elapsedTime);
   const [timeElapsed, setTimeElapsed] = useState(timeString);
 
   return (

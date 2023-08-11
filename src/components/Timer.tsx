@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { calculateTimeDifference } from "../utils/calculateTimeDifference";
+import { formattedTime } from "../utils/formattedTime";
 
 interface Props {
   active: boolean;
@@ -21,5 +21,5 @@ export const Timer = ({ active }: Props) => {
     }
   }, [active, count]);
 
-  return calculateTimeDifference(count);
+  return formattedTime(count);
 };
