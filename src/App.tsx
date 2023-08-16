@@ -24,6 +24,7 @@ import {
 } from "./db";
 import { Link, useParams } from "react-router-dom";
 import { parseTimeToSeconds } from "./utils/parseTimeToSeconds";
+import { Tags } from "./components/Tags";
 
 function App() {
   const [ticking, setTicking] = useState<boolean>(false);
@@ -88,9 +89,9 @@ function App() {
         <table className="w-full border-collapse border border-gray-400">
           <thead>
             <tr className="bg-gray-200">
-              <th className="p-4 text-left w-3/5">Task</th>
-              <th className="p-4 text-left w-1/5">Time spent</th>
-              <th className="p-4 text-left w-1/5"></th>
+              <th className="p-4 text-left w-3/6">Task</th>
+              <th className="p-4 text-left w-1/6">Time spent</th>
+              <th className="p-4 text-left w-2/6">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -168,7 +169,7 @@ const TaskCell = ({ task }: { task: TaskWithOptionalId }) => {
 
   return (
     <tr className="hover:bg-slate-200">
-      <td className="p-4 w-3/5">
+      <td className="p-4 w-3/6">
         <EditableInput
           value={text}
           onChange={(e) => {
@@ -179,9 +180,9 @@ const TaskCell = ({ task }: { task: TaskWithOptionalId }) => {
           }}
         />
       </td>
-      <td className="p-4 w-1/5">{formattedTime(task.elapsedTime)}</td>
-      <td className="p-4 w-1/5">
-        <div className="flex w-full justify-center items-center">
+      <td className="p-4 w-1/6">{formattedTime(task.elapsedTime)}</td>
+      <td className="p-4 w-2/6">
+        <div className="flex w-full justify-end items-center">
           <HiTrash
             onClick={() =>
               task.id &&
@@ -209,20 +210,22 @@ const LogCell = ({ log }: { log: LogWithOptionalId }) => {
   const [timeElapsed, setTimeElapsed] = useState(timeString);
 
   return (
-    <tr className="hover:bg-slate-200">
-      <td className="p-4 w-3/5 flex w-100 items-center">
-        <HiDocument className="m-2" />
-        <EditableInput
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-          }}
-          onBlur={() => {
-            if (log.id) {
-              updateLog(log.id, { name: text });
-            }
-          }}
-        />
+    <tr className="hover:bg-slate-200 border-2">
+      <td className="p-4 w-2/5">
+        <div className="w-full h-full flex items-center">
+          <HiDocument className="m-2" />
+          <EditableInput
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value);
+            }}
+            onBlur={() => {
+              if (log.id) {
+                updateLog(log.id, { name: text });
+              }
+            }}
+          />
+        </div>
       </td>
       <td className="p-4 w-1/5">
         <EditableInput
@@ -239,11 +242,14 @@ const LogCell = ({ log }: { log: LogWithOptionalId }) => {
         />
       </td>
       <td className="p-4 w-1/5">
-        <div className="flex w-full justify-center items-center">
-          <HiTrash
-            onClick={() => log.id && deleteLog(log.id)}
-            className="hover:text-rose-700 text-3xl me-1"
-          />
+        <div className="flex items-center">
+          <Tags />
+          <div className="flex w-full justify-center items-center">
+            <HiTrash
+              onClick={() => log.id && deleteLog(log.id)}
+              className="hover:text-rose-700 text-3xl me-1"
+            />
+          </div>
         </div>
       </td>
     </tr>
