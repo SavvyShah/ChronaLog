@@ -40,11 +40,7 @@ function App() {
   useEffect(() => {
     if (!intervalRef.current) {
       intervalRef.current = setInterval(() => {
-        const now = new Date();
-        const seconds = Math.floor(
-          (now.getTime() - startTime.getTime()) / 1000
-        );
-        setCount(seconds);
+        setCount((c) => c + 1);
       }, 1000);
     }
     if (!ticking) {
@@ -132,7 +128,7 @@ function App() {
         <div>
           {showStopWatch ? (
             <div className="text-2xl select-none">
-              <div>Stopwatch: {formattedTime(count)}</div>
+              <div>Stopwatch: {formattedTimeHHMMSS(count)}</div>
               <div>
                 <input
                   type="text"
