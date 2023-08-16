@@ -27,6 +27,7 @@ import { parseTimeToSeconds } from "./utils/parseTimeToSeconds";
 
 function App() {
   const [ticking, setTicking] = useState<boolean>(false);
+  const [currentLog, setCurrentLog] = useState<string>("");
   const [showStopWatch, setShowStopwatch] = useState<boolean>(false);
   const [startTime, setStartTime] = useState<Date>(new Date());
   const [count, setCount] = useState(0);
@@ -63,7 +64,7 @@ function App() {
     if (parentID) {
       await createLog(
         {
-          name: "Untitled",
+          name: currentLog || "Untitled",
           elapsedTime: count,
         },
         Number(parentID)
@@ -73,6 +74,7 @@ function App() {
     setCount(0);
     setShowStopwatch(false);
     setStartTime(new Date());
+    setCurrentLog("");
   };
 
   return (
@@ -131,6 +133,15 @@ function App() {
           {showStopWatch ? (
             <div className="text-2xl select-none">
               <div>Stopwatch: {formattedTime(count)}</div>
+              <div>
+                <input
+                  type="text"
+                  value={currentLog}
+                  onChange={(e) => setCurrentLog(e.target.value)}
+                  placeholder="Currently Doing..."
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none"
+                />
+              </div>
               <div className="flex">
                 {ticking ? (
                   <HiPauseCircle
