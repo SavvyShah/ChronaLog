@@ -26,6 +26,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@headlessui/react": "^1.7.16",
     "dexie": "^3.2.4",
     "dexie-react-hooks": "^1.1.6",
     "lodash": "^4.17.21",
