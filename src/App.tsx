@@ -28,8 +28,8 @@ import { parseTimeToSeconds } from "./utils/parseTimeToSeconds";
 function App() {
   const [ticking, setTicking] = useState<boolean>(false);
   const [currentLog, setCurrentLog] = useState<string>("");
+  const [lastPaused, setLastPaused] = useState<Date>(new Date());
   const [showStopWatch, setShowStopwatch] = useState<boolean>(false);
-  const [startTime, setStartTime] = useState<Date>(new Date());
   const [count, setCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { parentID } = useParams<{ parentID?: string }>();
@@ -40,18 +40,21 @@ function App() {
   useEffect(() => {
     if (!intervalRef.current) {
       intervalRef.current = setInterval(() => {
-        setCount((c) => c + 1);
+        const now = new Date();
+        const diffMilliSecs = now.getTime() - lastPaused.getTime();
+        const diffSecs = Math.floor(diffMilliSecs / 1000);
+        setCount(diffSecs);
       }, 1000);
     }
     if (!ticking) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  }, [ticking, startTime]);
+  }, [ticking, lastPaused]);
 
   const handleStartTask = () => {
     setTicking(true);
-    setStartTime(new Date());
+    setLastPaused(new Date());
     setCount(0);
     setShowStopwatch(true);
   };
@@ -69,7 +72,6 @@ function App() {
     setTicking(false);
     setCount(0);
     setShowStopwatch(false);
-    setStartTime(new Date());
     setCurrentLog("");
   };
 
@@ -90,7 +92,7 @@ function App() {
             <tr className="bg-gray-200">
               <th className="p-4 text-left w-3/6">Task</th>
               <th className="p-4 text-left w-1/6">Time spent</th>
-              <th className="p-4 text-left w-2/6">Actions</th>
+              <th className="p-4 text-right w-2/6">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -142,7 +144,10 @@ function App() {
                 {ticking ? (
                   <HiPauseCircle
                     className="p-1 text-5xl"
-                    onClick={() => setTicking(false)}
+                    onClick={() => {
+                      setTicking(false);
+                      setLastPaused(new Date());
+                    }}
                   />
                 ) : (
                   <HiPlayCircle
@@ -167,7 +172,7 @@ const TaskCell = ({ task }: { task: TaskWithOptionalId }) => {
   const [text, setText] = useState(task.name);
 
   return (
-    <tr className="hover:bg-slate-200">
+    <tr className="hover:bg-slate-200 border-2">
       <td className="p-4 w-3/6">
         <EditableInput
           value={text}
@@ -241,7 +246,7 @@ const LogCell = ({ log }: { log: LogWithOptionalId }) => {
         />
       </td>
       <td className="p-4 w-1/5">
-        <div className="flex w-full justify-center items-center">
+        <div className="flex w-full justify-end items-center">
           <HiTrash
             onClick={() => log.id && deleteLog(log.id)}
             className="hover:text-rose-700 text-3xl me-1"
