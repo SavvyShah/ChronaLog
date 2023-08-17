@@ -24,6 +24,7 @@ import {
 } from "./db";
 import { Link, useParams } from "react-router-dom";
 import { parseTimeToSeconds } from "./utils/parseTimeToSeconds";
+import { Tags } from "./components/Tags";
 
 function App() {
   const [ticking, setTicking] = useState<boolean>(false);
@@ -246,11 +247,14 @@ const LogCell = ({ log }: { log: LogWithOptionalId }) => {
         />
       </td>
       <td className="p-4 w-1/5">
-        <div className="flex w-full justify-end items-center">
-          <HiTrash
-            onClick={() => log.id && deleteLog(log.id)}
-            className="hover:text-rose-700 text-3xl me-1"
-          />
+        <div className="flex items-center">
+          {log?.id ? <Tags logId={log.id} /> : null}
+          <div className="flex w-full justify-end items-center">
+            <HiTrash
+              onClick={() => log.id && deleteLog(log.id)}
+              className="hover:text-rose-700 text-3xl me-1"
+            />
+          </div>
         </div>
       </td>
     </tr>
