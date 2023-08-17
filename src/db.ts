@@ -1,23 +1,30 @@
 // db.ts
 import Dexie, { Table } from "dexie";
-import { Log, Task } from "./types/core";
+import { Log, Tag, Task } from "./types/core";
 import { useLiveQuery } from "dexie-react-hooks";
 import { isNumber } from "./utils/isNumber";
 
 export type TaskWithOptionalId = Omit<Task, "id"> & { id?: number };
 export type LogWithOptionalId = Omit<Log, "id"> & { id?: number };
+export type TagWithOptionalId = Omit<Tag, "id"> & { id?: number };
 
 export class ChronaLog extends Dexie {
   // 'friends' is added by dexie when declaring the stores()
   // We just tell the typing system this is the case
   tasks!: Table<TaskWithOptionalId>;
   logs!: Table<LogWithOptionalId>;
+  tags!: Table<TagWithOptionalId>;
 
   constructor() {
     super("ChronaLog");
     this.version(1).stores({
       tasks: "++id, name, parentID, createdAt, updatedAt", // Primary key and indexed props
       logs: "++id, name, parentID, createdAt, updatedAt, tags",
+    });
+    this.version(2).stores({
+      tasks: "++id, name, parentID, createdAt, updatedAt", // Primary key and indexed props
+      logs: "++id, name, parentID, createdAt, updatedAt",
+      tags: "++id, name",
     });
   }
 }

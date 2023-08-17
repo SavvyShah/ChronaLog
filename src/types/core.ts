@@ -18,5 +18,10 @@ export interface Log {
   parentID: ID;
   createdAt?: Date;
   updatedAt?: Date;
-  tags?: string[];
+  tags?: ID[];
+}
+
+export interface Tag {
+  name: string;
+  id: ID;
 }
