@@ -2,6 +2,8 @@ import { Combobox, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import { HiChevronUpDown } from "react-icons/hi2";
 
+type Person = { name: string; id: number };
+
 const people = [
   { id: 1, name: "Durward" },
   { id: 2, name: "Kenton" },
@@ -11,7 +13,7 @@ const people = [
 ];
 
 export function Tags() {
-  const [selectedPeople, setSelectedPeople] = useState([]);
+  const [selectedPeople, setSelectedPeople] = useState<Person[]>([]);
   const [query, setQuery] = useState("");
 
   const filteredPeople =
