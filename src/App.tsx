@@ -31,12 +31,15 @@ function App() {
   const [currentLog, setCurrentLog] = useState<string>("");
   const [lastPaused, setLastPaused] = useState<Date>(new Date());
   const [showStopWatch, setShowStopwatch] = useState<boolean>(false);
-  const [count, setCount] = useState(0);
+  const [countSinceLastPause, setCountSinceLastPause] = useState(0);
+  const [savedCount, setSavedCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { parentID } = useParams<{ parentID?: string }>();
   const parentTask = useTask(Number(parentID));
   const tasks = parentTask?.subTasks || [];
   const logs = parentTask?.logs || [];
+
+  const totalCount = savedCount + countSinceLastPause;
 
   useEffect(() => {
     if (!intervalRef.current) {
@@ -44,7 +47,7 @@ function App() {
         const now = new Date();
         const diffMilliSecs = now.getTime() - lastPaused.getTime();
         const diffSecs = Math.floor(diffMilliSecs / 1000);
-        setCount(diffSecs);
+        setCountSinceLastPause(diffSecs);
       }, 1000);
     }
     if (!ticking) {
@@ -56,7 +59,7 @@ function App() {
   const handleStartTask = () => {
     setTicking(true);
     setLastPaused(new Date());
-    setCount(0);
+    setCountSinceLastPause(0);
     setShowStopwatch(true);
   };
 
@@ -65,13 +68,12 @@ function App() {
       await createLog(
         {
           name: currentLog || "Untitled",
-          elapsedTime: count,
+          elapsedTime: totalCount,
         },
         Number(parentID)
       );
     }
     setTicking(false);
-    setCount(0);
     setShowStopwatch(false);
     setCurrentLog("");
   };
@@ -131,7 +133,7 @@ function App() {
         <div>
           {showStopWatch ? (
             <div className="text-2xl select-none">
-              <div>Stopwatch: {formattedTimeHHMMSS(count)}</div>
+              <div>Stopwatch: {formattedTimeHHMMSS(totalCount)}</div>
               <div>
                 <input
                   type="text"
@@ -145,15 +147,17 @@ function App() {
                 {ticking ? (
                   <HiPauseCircle
                     className="p-1 text-5xl"
-                    onClick={() => {
-                      setTicking(false);
-                      setLastPaused(new Date());
-                    }}
+                    onClick={() => setTicking(false)}
                   />
                 ) : (
                   <HiPlayCircle
                     className="p-1 text-5xl"
-                    onClick={() => setTicking(true)}
+                    onClick={() => {
+                      setSavedCount(totalCount);
+                      setLastPaused(new Date());
+                      setCountSinceLastPause(0);
+                      setTicking(true);
+                    }}
                   />
                 )}
                 <HiStopCircle
