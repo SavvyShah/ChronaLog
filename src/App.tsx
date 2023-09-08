@@ -42,6 +42,12 @@ function App() {
   const totalCount = savedCount + countSinceLastPause;
 
   useEffect(() => {
+    window.onbeforeunload = function () {
+      return true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!intervalRef.current) {
       intervalRef.current = setInterval(() => {
         const now = new Date();
