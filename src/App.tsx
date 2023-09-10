@@ -42,8 +42,9 @@ function App() {
   const totalCount = savedCount + countSinceLastPause;
 
   useEffect(() => {
-    window.onbeforeunload = function () {
-      return true;
+    window.onbeforeunload = function (e) {
+       e.preventDefault();
+       return true;
     };
   }, []);
 
