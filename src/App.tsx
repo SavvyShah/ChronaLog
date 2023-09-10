@@ -2,6 +2,7 @@ import {
   HiArrowLeft,
   HiChevronDoubleRight,
   HiDocument,
+  HiMagnifyingGlass,
   HiPauseCircle,
   HiPlayCircle,
   HiPlus,
@@ -43,8 +44,8 @@ function App() {
 
   useEffect(() => {
     window.onbeforeunload = function (e) {
-       e.preventDefault();
-       return true;
+      e.preventDefault();
+      return true;
     };
   }, []);
 
@@ -77,7 +78,7 @@ function App() {
           name: currentLog || "Untitled",
           elapsedTime: totalCount,
         },
-        Number(parentID)
+        Number(parentID),
       );
     }
     setTicking(false);
@@ -87,15 +88,21 @@ function App() {
 
   return (
     <div>
-      {parentTask?.id ? (
-        <Link
-          className="m-2 text-2xl flex items-center"
-          to={parentTask.parentID ? `/task/${parentTask.parentID}` : "/"}
-        >
-          <HiArrowLeft className="inline-block me-1" />
-          Back
+      <div className="flex">
+        {parentTask?.id ? (
+          <Link
+            className="m-2 text-2xl flex items-center"
+            to={parentTask.parentID ? `/task/${parentTask.parentID}` : "/"}
+          >
+            <HiArrowLeft className="inline-block me-1" />
+            Back
+          </Link>
+        ) : null}
+        <Link className="m-2 text-2xl flex items-center" to="/search">
+          <HiMagnifyingGlass className="inline-block me-1" />
+          Search
         </Link>
-      ) : null}
+      </div>
       <div className="p-10">
         <table className="w-full border-collapse border border-gray-400">
           <thead>
@@ -106,12 +113,8 @@ function App() {
             </tr>
           </thead>
           <tbody>
-            {tasks?.map((task) => (
-              <TaskCell key={task.id} task={task} />
-            ))}
-            {logs?.map((log) => (
-              <LogCell key={log.id} log={log} />
-            ))}
+            {tasks?.map((task) => <TaskCell key={task.id} task={task} />)}
+            {logs?.map((log) => <LogCell key={log.id} log={log} />)}
           </tbody>
         </table>
         <div>
@@ -203,7 +206,7 @@ const TaskCell = ({ task }: { task: TaskWithOptionalId }) => {
             onClick={() =>
               task.id &&
               window.confirm(
-                "Are you sure you want to delete? This is irreversible and all the sub-tasks with tracked time will be deleted"
+                "Are you sure you want to delete? This is irreversible and all the sub-tasks with tracked time will be deleted",
               ) &&
               deleteTask(task.id)
             }
