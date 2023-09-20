@@ -8,10 +8,17 @@ import { useEffect, useState } from "react";
 export const Search = () => {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [query, setQuery] = useState("");
+  const [type, setType] = useState("tasks");
   const tasks = useLiveQuery(async () => {
-    if (query) return await db.tasks.where("name").startsWith(query).limit(50).toArray();
-    return await db.tasks.limit(50).toArray();
-  }, [query]);
+    const collection = type === "tasks" ? db.tasks : db.logs;
+    if (query)
+      return await collection
+        .where("name")
+        .startsWith(query)
+        .limit(50)
+        .toArray();
+    return await collection.limit(50).toArray();
+  }, [query, type]);
 
   useEffect(() => {
     const DEBOUNCE_DELAY = 500;
@@ -24,10 +31,20 @@ export const Search = () => {
 
   return (
     <div>
-      <Link className="m-2 text-2xl flex items-center" to={"/"}>
-        <HiHome className="inline-block me-1" />
-        Home
-      </Link>
+      <div className="flex">
+        <Link className="m-2 text-2xl flex items-center" to={"/"}>
+          <HiHome className="inline-block me-1" />
+          Home
+        </Link>
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          className="rounded bg-blue-500 text-white px-2 py-1 m-1 text-xs select-none cursor-pointer whitespace-nowrap"
+        >
+          <option value="tasks">Tasks</option>
+          <option value="logs">Logs</option>
+        </select>
+      </div>
       <div>
         <input
           type="text"
@@ -46,7 +63,9 @@ export const Search = () => {
           </tr>
         </thead>
         <tbody>
-          {tasks?.map((task) => <TaskCell key={task.id} task={task} />)}
+          {tasks?.map((task) => (
+            <TaskCell key={task.id} task={task} />
+          ))}
         </tbody>
       </table>
     </div>
